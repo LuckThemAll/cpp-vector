@@ -196,15 +196,9 @@ namespace art{
         pointer new_first = _m_allocator.allocate(need_size);
         if (new_first == _m_first)
             return;
-        if (_m_first) {
-            try {
-                std::copy(_m_first, _m_first + std::min(size(), need_size), new_first);
-            }
-            catch (...) {
-                _m_allocator.deallocate(new_first, need_size * _m_SIZE_INCREASE_FACTOR);
-                throw;
-            }
-            _m_allocator.deallocate(_m_first, capacity());
+        for (size_type i = 0; i < size(); ++i){
+            std::allocator_traits<Allocator>::construct(_m_allocator, new_first + i, std::forward<Type>(_m_first[i]));
+            std::allocator_traits<Allocator>::destroy(_m_allocator, _m_first + i);
         }
         size_type old_size = size();
         _m_first = new_first;
@@ -396,7 +390,9 @@ namespace art{
     template<typename Type, typename Allocator>
     template<class... Args>
     void vector<Type, Allocator>::emplace_back(Args&& ... args) {
-        emplace(end(), std::forward<Args>(args)...);
+        _m_allocate_and_copy(size() + 1);
+        std::allocator_traits<Allocator>::construct(_m_allocator, _m_first + size(), std::forward<Args&&>(args)...);
+        ++_m_last;
     }
 
     template<typename Type, typename Allocator>
@@ -419,26 +415,26 @@ namespace art{
 
     template<typename Type, typename Allocator>
     typename vector<Type, Allocator>::iterator vector<Type, Allocator>::insert(const_iterator pos, Type&& value) {
-        size_type index = pos - begin();
         size_type new_size = size() + 1;
+        size_type insert_to = pos - begin();
         if (new_size > capacity()) _m_allocate_and_copy(new_size);
-        auto new_iter = begin() + index;
-        std::copy_backward(new_iter, end(), end() + 1);
-        *new_iter = value;
+        auto new_iter_for_insert = begin() + insert_to;
+        std::copy_backward(new_iter_for_insert, end(), end() + 1);
+        *new_iter_for_insert = value;
         ++(_m_last);
-        return new_iter;
+        return new_iter_for_insert;
     }
 
     template<typename Type, typename Allocator>
-    typename vector<Type, Allocator>::iterator vector<Type, Allocator>::insert(iterator it, size_type n, const Type& value) {
+    typename vector<Type, Allocator>::iterator vector<Type, Allocator>::insert(const_iterator pos, size_type n, const Type& value) {
         size_type new_size = size() + n;
-        size_type index = it - begin();
+        size_type insert_to = pos - begin();
         if (new_size > capacity()) _m_allocate_and_copy(new_size);
-        it = begin() + index;
-        std::copy_backward(it, end(), it + n + size() - index);
-        std::fill(it, it + n, value);
+        pos = begin() + insert_to;
+        std::copy_backward(pos, end(), pos + n + size() - insert_to);
+        std::fill(pos, pos + n, value);
         _m_last = _m_first + new_size;
-        return it;
+        return pos;
     }
 
     template<typename Type, typename Allocator>

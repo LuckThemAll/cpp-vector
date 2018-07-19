@@ -1,4 +1,3 @@
-#define CATCH_CONFIG_MAIN
 
 #include <vector>
 #include <exception>
@@ -12,6 +11,7 @@ TEST_CASE("Constructing vector") {
         art::vector<int> art_vec;
         art::vector<int>::size_type expected_capacity = 0;
         REQUIRE(art_vec.capacity() == expected_capacity);
+        REQUIRE(art_vec.size() == expected_capacity);
         REQUIRE(art_vec.empty());
     }
 
@@ -23,10 +23,10 @@ TEST_CASE("Constructing vector") {
     }
 
     SECTION("pass size and value") {
-        std::vector<int>::size_type expectedSize = 7;
-        std::vector<int>::value_type expectedValue = 125;
-        std::vector<int> expected(expectedSize, expectedValue);
-        art::vector<int> art_vec(expectedSize, expectedValue);
+        std::vector<int>::size_type expected_size = 7;
+        std::vector<int>::value_type expected_value = 125;
+        std::vector<int> expected(expected_size, expected_value);
+        art::vector<int> art_vec(expected_size, expected_value);
         REQUIRE(art_vec.capacity() >= expected.size());
         REQUIRE(art_vec.size() == expected.size());
         REQUIRE(art_vec == expected);
@@ -82,6 +82,7 @@ TEST_CASE("Data info access") {
         REQUIRE(art_vec.at(1) == std_vec.at(1));
         REQUIRE(art_vec.at(2) == std_vec.at(2));
         REQUIRE(art_vec.at(3) == std_vec.at(3));
+        REQUIRE(art_vec[3] == std_vec[3]);
         REQUIRE_FALSE(art_vec.at(3) == std_vec.at(1));
     }
 
@@ -157,9 +158,9 @@ TEST_CASE("Vector resizing") {
 
     SECTION("Pass size and default value for added elements") {
         std::vector<int> std_vec = {1, 2, 3, 4};
-        std_vec.resize(6, 1);
+        std_vec.resize(6, 3);
         art::vector<int> art_vec = {1, 2, 3, 4};
-        art_vec.resize(6, 1);
+        art_vec.resize(6, 3);
         REQUIRE(art_vec.capacity() >= std_vec.size());
         REQUIRE(art_vec == std_vec);
     }
@@ -335,5 +336,27 @@ TEST_CASE("Modifier elements methods") {
         art_vec.emplace_back(2);
         REQUIRE(art_vec.size() == std_vec.size());
         REQUIRE(art_vec[1] == std_vec[1]);
+    }
+}
+
+TEST_CASE("emplace_back"){
+    class SomeClass{
+    public:
+        SomeClass() : _a(10) {}
+
+        SomeClass(const SomeClass&) = delete;
+        SomeClass(SomeClass&&) = default;
+
+        int getA() const { return _a; }
+    private:
+        int _a;
+    };
+    SECTION("emplace_back"){
+        SECTION("true emplace_back()") {
+            art::vector<SomeClass> art_vec;
+            art_vec.emplace_back(SomeClass());
+
+            REQUIRE(art_vec[0].getA() == 10);
+        }
     }
 }
