@@ -177,13 +177,11 @@ namespace art{
 
     private:
         const int _m_SIZE_INCREASE_FACTOR = 2;
-        const int _m_INIT_CAPACITY = 10;
-
 
         Allocator _m_allocator;
-        Type* _m_first = nullptr;
-        Type* _m_last = nullptr;
-        Type* _m_end_of_capacity = nullptr;
+        pointer _m_first = nullptr;
+        pointer _m_last = nullptr;
+        pointer _m_end_of_capacity = nullptr;
 
         void _m_allocate_and_copy(size_type need_size);
         void _m_initialize(iterator first, iterator last);
@@ -244,9 +242,6 @@ namespace art{
     template<typename Type, typename Allocator>
     vector<Type, Allocator>::vector(const Allocator& alloc) {
         _m_allocator = alloc;
-        /*_m_allocate_and_copy((unsigned) _m_INIT_CAPACITY);
-        _m_last = _m_first + _m_INIT_CAPACITY;
-        _m_initialize(begin(), end());*/
     }
 
     template<typename Type, typename Allocator>
@@ -269,7 +264,6 @@ namespace art{
         _m_end_of_capacity = other._m_end_of_capacity;
         assign(other.begin(), other.end());
     }
-    //vector( vector&& other, const Alloc& alloc );
 
     template<typename Type, typename Allocator>
     template<typename InputIt>
@@ -659,7 +653,6 @@ namespace art{
     template<class U, class UAllocator>
     bool operator>=(const vector<U, UAllocator>& lhs, const vector<U, UAllocator>& rhs)
     {
-        return rhs <= lhs;
         return rhs <= lhs;
     }
 
